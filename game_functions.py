@@ -1,6 +1,7 @@
 import sys
 import pygame
 from bullet import Bullet
+from alien import Alien
 
 
 def check_keydown_events(event, ai_settings, screen, ship, bullets):
@@ -42,7 +43,7 @@ def check_events(ai_settings, screen, ship, bullets):
             check_keyup_events(event, ship)
 
 
-def update_screen(ai_settings, screen, ship, alien, bullets):
+def update_screen(ai_settings, screen, ship, aliens, bullets):
     """Atualiza as imagens na tela e alterna para a nova tela."""
     #Redesenha a tela a cada passagem pelo laço
     screen.fill(ai_settings.bg_color)
@@ -50,7 +51,7 @@ def update_screen(ai_settings, screen, ship, alien, bullets):
     for bullet in bullets.sprites():
         bullet.draw_bullet()
     ship.blitme()
-    alien.blitme()
+    aliens.draw(screen)
 
     #Deixa a tela mais recente visivel
     pygame.display.flip()
@@ -66,3 +67,30 @@ def update_bullets(bullets):
         if bullet.rect.bottom <= 0:
             bullets.remove(bullet)
 
+
+def get_number_aliens_x(ai_settings, alien_width):
+    """Determina o numero de alienigenas que cabem em uma linha"""
+    available_space_x = ai_settings.screen_width - 2 * alien_width
+    number_aliens_x = int(available_space_x / (2 * alien_width))
+
+    return number_aliens_x
+
+
+def create_alien(ai_settings, screen, aliens, alien_number):
+    #Cria um alienigena e o posiciona na linha
+    alien = Alien(ai_settings, screen)
+    alien_width = alien.rect.width
+    alien.x = alien_width + 2 * alien_width * alien_number
+    alien.rect.x = alien.x
+    aliens.add(alien)
+
+
+def creat_fleet(ai_settings, screen, aliens):
+    """Cria uma frota completa de alienigenas."""
+    #Cria um alienigena e calcula o numero de alienigenas em uma linha
+    alien = Alien(ai_settings, screen)
+    number_aliens_x = get_number_aliens_x(ai_settings, alien.rect.width)
+
+    #Cria a primeira linha de alienigenas
+    for alien_number in range(number_aliens_x):
+        create_alien(ai_settings, screen, aliens, alien_number)
