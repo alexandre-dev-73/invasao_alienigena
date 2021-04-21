@@ -1,4 +1,5 @@
 import sys
+from time import sleep
 import pygame
 from bullet import Bullet
 from alien import Alien
@@ -57,7 +58,7 @@ def update_screen(ai_settings, screen, ship, aliens, bullets):
     pygame.display.flip()
 
 
-def update_bullets(bullets):
+def update_bullets(ai_settings, screen, ship, aliens, bullets):
     """Atualiza a posição dos projéteis e se livra dos projéteis antigos."""
     #Atualiza as posições dos projéteis
     bullets.update()
@@ -66,6 +67,19 @@ def update_bullets(bullets):
     for bullet in bullets.copy():
         if bullet.rect.bottom <= 0:
             bullets.remove(bullet)
+
+    check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets)
+
+
+def check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets):
+    """Responde a colisões entre projeteis e alienigenas."""
+    #Remove qualquer projetil e aliengena que tenha colidido
+    collisions = pygame.sprite.groupcollide(bullets, aliens, True, True)
+
+    if len(aliens) == 0:
+        #Destroi os projéeis existentes e cria uma nova frota
+        bullets.empty()
+        create_fleet(ai_settings, screen, ship, aliens)
 
 
 def get_number_aliens_x(ai_settings, alien_width):
@@ -120,10 +134,30 @@ def change_fleet_direction(ai_settings, aliens):
     ai_settings.fleet_direction *= -1
 
 
-def update_aliens(ai_settings, aliens):
-    """Verifica se afrota está em uma das bordas e então
-    atualiza as posições de todos os alienigenas da frota"""
+def ship_hit(ai_settings, stats, screen, ship, aliens, bullets):
+    """Responde ao fato de a espaçonave ter sido atingida por um alienigena."""
+    #Decrementa ship_left
+    stats.ships_left -= 1
+
+    #Esvazia a lista de alienigenas e de projeteis
+    aliens.empty()
+    bullets.empty()
+
+    #Cria uma nova frota e centraliza a espaçonave
+    create_fleet(ai_settings, screen, ship, aliens)
+    ship.center_ship()
+
+    #faz uma pausa
+    sleep(0.5)
+
+
+def update_aliens(ai_settings, stats, screen, ship, aliens, bullets):
+    """Verifica se a frota está em uma das bordas
+    e então atualiza as pasições de todos os alienigenas da frota."""
     check_fleet_edges(ai_settings, aliens)
     aliens.update()
 
+    """Verifica se houve colisões entre alienigenas e a espaçonave"""
+    if pygame.sprite.spritecollideany(ship, aliens):
+        ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
 
